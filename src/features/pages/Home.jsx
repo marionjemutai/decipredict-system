@@ -1,54 +1,48 @@
 import { useCallback } from "react";
+import { Link } from "react-router-dom";
 import { TrendingUp, AlertCircle, MessageSquarePlus } from "lucide-react";
 import { useRevealOnScroll } from "../../shared/hooks/useRevealOnScroll";
 import { Footer } from "../../shared/component/Footer";
 import { Navigation } from "../../shared/component/Navigation";
 
-/* ================= HERO ================= */
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 py-20 sm:py-24 md:py-28">
       
-      {/* Background blur effects */}
       <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-blue-400 opacity-30 blur-3xl" />
       <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-indigo-500 opacity-30 blur-3xl" />
 
       <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
         
-        {/* Heading */}
         <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
           Predict Regret, Make Smarter Decisions
         </h1>
 
-        {/* Subtext */}
         <p className="mx-auto mt-6 max-w-2xl text-base text-blue-100 sm:text-lg md:text-xl">
           Leverage AI-powered regret prediction and real-time decision feedback
           to avoid future disappointment. Analyze potential outcomes, understand
           emotional impact, and make choices you won’t regret.
         </p>
 
-        {/* Buttons */}
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <button className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-600 shadow-md transition hover:scale-105 hover:bg-gray-100">
+          <Link to="/dashboard" className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-600 shadow-md transition hover:scale-105 hover:bg-gray-100">
             Start Predicting →
-          </button>
+          </Link>
 
-          <button className="rounded-xl bg-gray-200/80 px-6 py-3 text-sm font-semibold text-gray-700 shadow-md backdrop-blur transition hover:scale-105 hover:bg-gray-300">
-            Learn More
-          </button>
+
         </div>
       </div>
     </section>
   );
 }
 
-/* ================= DATA ================= */
+
 const FEATURES = [
   {
     id: "prediction",
     title: "Decision prediction",
     description:
-      "Use advanced machine learning to predict the outcomes of your decisions before you make them.",
+      "Predict the outcomes of your decisions before you make them.",
     image:
       "https://images.unsplash.com/photo-1717501219621-7b860d789a2e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=600&q=80",
     gradient: "from-blue-500 to-cyan-500",
@@ -83,7 +77,7 @@ const STATS = [
   { value: "24/7", label: "Live support" },
 ];
 
-/* ================= COMPONENTS ================= */
+
 function FeatureCard({ title, description, image, gradient, Icon }) {
   const handleImageError = useCallback((e) => {
     e.currentTarget.style.opacity = "0";
@@ -132,7 +126,7 @@ function StatCard({ value, label }) {
   );
 }
 
-/* ================= MAIN ================= */
+
 export function Home() {
   const cardsRef = useRevealOnScroll();
   const statsRef = useRevealOnScroll();
