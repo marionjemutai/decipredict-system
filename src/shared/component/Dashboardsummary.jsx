@@ -2,26 +2,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { TrendingUp, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
+/* =========================
+   Data
+========================= */
 const summaryData = [
   {
     title: "Success Rate",
     value: "87%",
     change: "+5%",
     icon: CheckCircle,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    borderColor: "border-emerald-100",
-    gradient: "from-emerald-400 to-teal-400",
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    gradient: "from-green-500 to-emerald-500",
+    progress: "87%",
   },
   {
     title: "Regret Rate",
     value: "13%",
     change: "-3%",
     icon: AlertTriangle,
-    color: "text-amber-600",
-    bgColor: "bg-amber-50",
-    borderColor: "border-amber-100",
-    gradient: "from-amber-400 to-orange-400",
+    color: "text-orange-600",
+    bgColor: "bg-orange-50",
+    gradient: "from-orange-500 to-red-500",
+    progress: "13%",
   },
   {
     title: "Total Decisions",
@@ -30,24 +33,27 @@ const summaryData = [
     icon: TrendingUp,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
-    borderColor: "border-blue-100",
-    gradient: "from-blue-400 to-indigo-400",
+    gradient: "from-blue-500 to-indigo-500",
+    progress: "70%",
   },
   {
     title: "Pending Review",
     value: "23",
     change: "+8",
     icon: Clock,
-    color: "text-violet-600",
-    bgColor: "bg-violet-50",
-    borderColor: "border-violet-100",
-    gradient: "from-violet-400 to-purple-400",
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+    gradient: "from-purple-500 to-pink-500",
+    progress: "40%",
   },
 ];
 
-export default function DecisionSummary() {
+/* =========================
+   Component
+========================= */
+export function DecisionSummary() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       {summaryData.map((item, index) => {
         const Icon = item.icon;
 
@@ -58,68 +64,56 @@ export default function DecisionSummary() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
-            <Card className={`border ${item.borderColor} shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group bg-white`}>
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
               
+              {/* Header */}
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center justify-between">
-                  
                   <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                     {item.title}
                   </CardTitle>
 
                   <motion.div
-                    className={`p-2.5 ${item.bgColor} rounded-xl`}
+                    className={`p-2 sm:p-2.5 ${item.bgColor} rounded-lg`}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={{ duration: 0.2 }}
                   >
                     <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${item.color}`} />
                   </motion.div>
-
                 </div>
               </CardHeader>
 
+              {/* Content */}
               <CardContent className="pt-0">
-                <div className="flex items-baseline justify-between mb-3">
-                  
-                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                <div className="flex items-baseline justify-between">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {item.value}
                   </h3>
 
                   <span
                     className={`text-xs sm:text-sm font-semibold ${
                       item.change.startsWith("+")
-                        ? "text-emerald-600"
-                        : "text-rose-600"
+                        ? "text-green-600"
+                        : "text-red-600"
                     }`}
                   >
                     {item.change}
                   </span>
-
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div className="mt-3 sm:mt-4 w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
                   <motion.div
                     className={`h-full bg-gradient-to-r ${item.gradient} rounded-full`}
                     initial={{ width: 0 }}
-                    animate={{
-                      width:
-                        item.title === "Success Rate"
-                          ? "87%"
-                          : item.title === "Regret Rate"
-                          ? "13%"
-                          : "70%",
-                    }}
+                    animate={{ width: item.progress }}
                     transition={{
                       duration: 1,
                       delay: 0.5 + index * 0.1,
-                      ease: "easeOut",
                     }}
                   />
                 </div>
-
               </CardContent>
-
             </Card>
           </motion.div>
         );

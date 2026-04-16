@@ -1,5 +1,21 @@
-import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import {
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  AlertCircle,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
+/* =========================
+   Data
+========================= */
 const options = [
   {
     id: 1,
@@ -36,84 +52,160 @@ const options = [
   },
 ];
 
-export default function ComparisonTable() {
+/* =========================
+   Helper
+========================= */
+const getStatusBadge = (status) => {
+  const styles = {
+    recommended: "bg-green-100 text-green-800",
+    neutral: "bg-blue-100 text-blue-800",
+    caution: "bg-orange-100 text-orange-800",
+  };
+
+  const labels = {
+    recommended: "Recommended",
+    neutral: "Consider",
+    caution: "Caution",
+  };
+
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: "10px", overflow: "hidden" }}>
-      
-      {/* Header */}
-      <div style={{ padding: "16px", borderBottom: "1px solid #eee", background: "#f9fafb" }}>
-        <h2>Decision Options Comparison</h2>
-        <p>Side-by-side analysis of predicted outcomes and regret scores</p>
-      </div>
+    <span
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}
+    >
+      {labels[status]}
+    </span>
+  );
+};
 
-      {/* Table */}
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead style={{ background: "#f3f4f6" }}>
-          <tr>
-            <th>Option</th>
-            <th>Success Rate</th>
-            <th>Regret Score</th>
-            <th>Timeframe</th>
-            <th>Investment</th>
-            <th>Insights</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+/* =========================
+   Component
+========================= */
+export function ComparisonTable() {
+  return (
+    <Card className="border-0 shadow-lg">
+      <CardHeader className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardTitle className="text-lg sm:text-xl text-gray-900">
+          Decision Options Comparison
+        </CardTitle>
+        <CardDescription className="text-sm sm:text-base">
+          Compare predicted outcomes and regret scores
+        </CardDescription>
+      </CardHeader>
 
-        <tbody>
-          {options.map((option) => (
-            <tr key={option.id} style={{ borderTop: "1px solid #eee" }}>
-              
-              <td>{option.name}</td>
+      <CardContent className="p-0">
+        {/* Desktop */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                {[
+                  "Option",
+                  "Success Rate",
+                  "Regret Score",
+                  "Timeframe",
+                  "Investment",
+                  "Key Insights",
+                  "Status",
+                ].map((head) => (
+                  <th
+                    key={head}
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
+                  >
+                    {head}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-              <td style={{ textAlign: "center" }}>
-                {option.successRate}%
-                <div style={{ background: "#eee", height: "6px", marginTop: "5px" }}>
-                  <div
-                    style={{
-                      width: `${option.successRate}%`,
-                      background: "green",
-                      height: "100%",
-                    }}
-                  />
-                </div>
-              </td>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {options.map((option, index) => (
+                <motion.tr
+                  key={option.id}
+                  className="hover:bg-gray-50 transition-colors"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    {option.name}
+                  </td>
 
-              <td style={{ textAlign: "center" }}>
-                {option.regretScore}%
-                <div style={{ background: "#eee", height: "6px", marginTop: "5px" }}>
-                  <div
-                    style={{
-                      width: `${option.regretScore}%`,
-                      background: "orange",
-                      height: "100%",
-                    }}
-                  />
-                </div>
-              </td>
+                  {/* Success */}
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center items-center gap-2">
+                      <span className="text-lg font-bold text-green-600">
+                        {option.successRate}%
+                      </span>
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                    </div>
+                  </td>
 
-              <td>{option.timeframe}</td>
-              <td>{option.investment}</td>
+                  {/* Regret */}
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center items-center gap-2">
+                      <span className="text-lg font-bold text-orange-600">
+                        {option.regretScore}%
+                      </span>
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                    </div>
+                  </td>
 
-              <td>
-                <div>
-                  <strong>Pro:</strong> {option.pros[0]}
-                </div>
-                <div>
-                  <strong>Con:</strong> {option.cons[0]}
-                </div>
-              </td>
+                  <td className="px-6 py-4 text-center text-sm">
+                    {option.timeframe}
+                  </td>
 
-              <td style={{ textAlign: "center" }}>
-                {option.status === "recommended" && "✅ Recommended"}
-                {option.status === "neutral" && "🔵 Consider"}
-                {option.status === "caution" && "⚠️ Caution"}
-              </td>
+                  <td className="px-6 py-4 text-center font-semibold">
+                    {option.investment}
+                  </td>
 
-            </tr>
+                  {/* Insights */}
+                  <td className="px-6 py-4 text-xs">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      {option.pros[0]}
+                    </div>
+                    <div className="flex items-start gap-2 mt-1">
+                      <XCircle className="w-4 h-4 text-red-600" />
+                      {option.cons[0]}
+                    </div>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-6 py-4 text-center">
+                    {getStatusBadge(option.status)}
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile */}
+        <div className="lg:hidden p-4 space-y-4">
+          {options.map((option, index) => (
+            <motion.div
+              key={option.id}
+              className="border rounded-lg p-4 bg-white"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex justify-between mb-2">
+                <h3 className="font-semibold text-sm">{option.name}</h3>
+                {getStatusBadge(option.status)}
+              </div>
+
+              <p className="text-xs text-gray-500">
+                Success: {option.successRate}% | Regret: {option.regretScore}%
+              </p>
+
+              <p className="text-xs mt-1">
+                {option.timeframe} • {option.investment}
+              </p>
+            </motion.div>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
