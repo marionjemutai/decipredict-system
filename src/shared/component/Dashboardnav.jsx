@@ -59,7 +59,7 @@ export function DashboardNav() {
             >
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-semibold text-gray-900">
-                  John Doe
+                  kiprotih Marion
                 </p>
                 <p className="text-xs text-gray-500">
                   Premium User
@@ -67,7 +67,7 @@ export function DashboardNav() {
               </div>
 
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                JD
+                KM
               </div>
             </motion.div>
 

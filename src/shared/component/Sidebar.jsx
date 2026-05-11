@@ -11,13 +11,13 @@ const menuItems = [
   { icon: LayoutDashboard,  label: "Dashboard",       href: "/dashboard" },
   { icon: TrendingUp,       label: "Predictions",     href: "/predict"   },
   { icon: AlertCircle,      label: "Regret Analysis", href: "/regret"    },
-  { icon: MessageSquarePlus,label: "Feedback",        href: "#"          },
+  { icon: MessageSquarePlus,label: "Feedback",        href: "/feedback"  },
   { icon: History,          label: "History",         href: "#"          },
 ];
 
 const bottomItems = [
-  { icon: Settings,   label: "Settings",      href: "#" },
-  { icon: HelpCircle, label: "Help & Support", href: "#" },
+  { icon: Settings,   label: "Settings",      href: "/settings" },
+  { icon: HelpCircle, label: "Help & Support", href: "/help" },
 ];
 
 export function Sidebar() {

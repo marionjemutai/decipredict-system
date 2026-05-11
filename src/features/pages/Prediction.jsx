@@ -7,17 +7,24 @@ import { Card, CardContent } from "../../shared/ui/card";
 import { Sparkles, Brain, ArrowRight } from "lucide-react";
 import { usePrediction } from "../../shared/context/PredictionContext";
 
+const OPTION_STYLES = [
+  { label: "A", badge: "bg-blue-100 text-blue-600",   ring: "focus:ring-blue-400/30 focus:border-blue-300"   },
+  { label: "B", badge: "bg-violet-100 text-violet-600",ring: "focus:ring-violet-400/30 focus:border-violet-300"},
+  { label: "C", badge: "bg-emerald-100 text-emerald-600",ring: "focus:ring-emerald-400/30 focus:border-emerald-300"},
+];
+
 export function Prediction() {
   const [title, setTitle]     = useState("");
   const [optionA, setOptionA] = useState("");
   const [optionB, setOptionB] = useState("");
+  const [optionC, setOptionC] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
 
   const { setPrediction } = usePrediction();
   const navigate = useNavigate();
 
-  const canSubmit = title.trim() && optionA.trim() && optionB.trim();
+  const canSubmit = title.trim() && optionA.trim() && optionB.trim() && optionC.trim();
 
   const handlePredict = async (e) => {
     e.preventDefault();
@@ -30,15 +37,16 @@ export function Prediction() {
       const response = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, optionA, optionB }),
+        body: JSON.stringify({ title, optionA, optionB, optionC }),
       });
 
       if (!response.ok) throw new Error("Prediction failed");
 
       const result = await response.json();
-      // Expected: { regretA, regretB, recommended, explanation, riskFactors: { financial: {a,b}, emotional: {a,b}, time: {a,b} } }
+      // Expected: { regretA, regretB, regretC, recommended, explanation,
+      //             riskFactors: { financial:{a,b,c}, emotional:{a,b,c}, time:{a,b,c} } }
 
-      setPrediction({ title, optionA, optionB, result });
+      setPrediction({ title, optionA, optionB, optionC, result });
       navigate("/regret");
     } catch (err) {
       setError("Backend not connected yet. Connect your API to see the regret analysis.");
@@ -46,6 +54,12 @@ export function Prediction() {
       setLoading(false);
     }
   };
+
+  const options = [
+    { value: optionA, setter: setOptionA, style: OPTION_STYLES[0], placeholder: "Describe option A..." },
+    { value: optionB, setter: setOptionB, style: OPTION_STYLES[1], placeholder: "Describe option B..." },
+    { value: optionC, setter: setOptionC, style: OPTION_STYLES[2], placeholder: "Describe option C..." },
+  ];
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -64,7 +78,7 @@ export function Prediction() {
                 Decision Prediction
               </h1>
               <p className="text-gray-500 text-sm mt-1">
-                Enter your decision and two options — AI will predict regret risk and navigate you to the full analysis.
+                Enter your decision and three options — AI will predict regret risk for each.
               </p>
             </motion.div>
 
@@ -74,6 +88,7 @@ export function Prediction() {
                 <CardContent className="p-6">
                   <form onSubmit={handlePredict} className="space-y-5">
 
+                    {/* Title */}
                     <div className="space-y-1.5">
                       <label className="text-sm font-semibold text-gray-700">Decision Title</label>
                       <input
@@ -85,33 +100,25 @@ export function Prediction() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center">A</span>
-                          Option A
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={optionA}
-                          onChange={(e) => setOptionA(e.target.value)}
-                          placeholder="Describe option A..."
-                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-300 transition-all"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 text-xs font-bold flex items-center justify-center">B</span>
-                          Option B
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={optionB}
-                          onChange={(e) => setOptionB(e.target.value)}
-                          placeholder="Describe option B..."
-                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-300 transition-all"
-                        />
-                      </div>
+                    {/* Options grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {options.map(({ value, setter, style, placeholder }) => (
+                        <div key={style.label} className="space-y-1.5">
+                          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <span className={`w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${style.badge}`}>
+                              {style.label}
+                            </span>
+                            Option {style.label}
+                          </label>
+                          <textarea
+                            rows={4}
+                            value={value}
+                            onChange={(e) => setter(e.target.value)}
+                            placeholder={placeholder}
+                            className={`w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 transition-all ${style.ring}`}
+                          />
+                        </div>
+                      ))}
                     </div>
 
                     {error && (

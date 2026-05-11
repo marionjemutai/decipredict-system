@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../shared/ui/card";
 import { usePrediction } from "../../shared/context/PredictionContext";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
 import {
@@ -14,16 +14,23 @@ import {
   DollarSign, Heart, Clock, CheckCircle2, ArrowLeft,
 } from "lucide-react";
 
-function RegretBar({ label, value, colorClass, trackClass }) {
+const OPTIONS_META = [
+  { key: "A", label: "Option A", bg: "bg-blue-50",    border: "border-blue-200",    badge: "bg-blue-100 text-blue-700",    bar: "#3b82f6", radar: "#3b82f6" },
+  { key: "B", label: "Option B", bg: "bg-violet-50",  border: "border-violet-200",  badge: "bg-violet-100 text-violet-700",bar: "#8b5cf6", radar: "#8b5cf6" },
+  { key: "C", label: "Option C", bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700",bar: "#10b981", radar: "#10b981" },
+];
+
+function RegretBar({ label, value, barColor, trackClass }) {
   return (
     <div>
       <div className="flex justify-between mb-1.5">
         <span className="text-sm font-medium text-gray-700">{label}</span>
-        <span className={`text-sm font-bold ${colorClass}`}>{value}%</span>
+        <span className="text-sm font-bold" style={{ color: barColor }}>{value}%</span>
       </div>
       <div className={`w-full h-3 rounded-full ${trackClass}`}>
         <motion.div
-          className={`h-full rounded-full ${colorClass.replace("text-", "bg-")}`}
+          className="h-full rounded-full"
+          style={{ backgroundColor: barColor }}
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
           transition={{ duration: 0.9, ease: "easeOut" }}
@@ -36,7 +43,7 @@ function RegretBar({ label, value, colorClass, trackClass }) {
   );
 }
 
-function RiskRow({ label, icon: Icon, iconBg, iconColor, a, b }) {
+function RiskRow({ label, icon: Icon, iconBg, iconColor, values }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -45,18 +52,19 @@ function RiskRow({ label, icon: Icon, iconBg, iconColor, a, b }) {
         </div>
         <span className="text-sm font-semibold text-gray-700">{label}</span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        {[{ lbl: "Option A", val: a, color: "bg-blue-500",   track: "bg-blue-100"   },
-          { lbl: "Option B", val: b, color: "bg-violet-500", track: "bg-violet-100" }].map((o) => (
-          <div key={o.lbl}>
+      <div className="grid grid-cols-3 gap-2">
+        {OPTIONS_META.map((opt) => (
+          <div key={opt.key}>
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>{o.lbl}</span><span className="font-semibold">{o.val}%</span>
+              <span>{opt.label}</span>
+              <span className="font-semibold">{values[opt.key.toLowerCase()]}%</span>
             </div>
-            <div className={`w-full h-2 rounded-full ${o.track}`}>
+            <div className="w-full h-2 rounded-full bg-gray-100">
               <motion.div
-                className={`h-full rounded-full ${o.color}`}
+                className="h-full rounded-full"
+                style={{ backgroundColor: opt.radar }}
                 initial={{ width: 0 }}
-                animate={{ width: `${o.val}%` }}
+                animate={{ width: `${values[opt.key.toLowerCase()]}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
               />
             </div>
@@ -71,7 +79,6 @@ export function RegretAnalysis() {
   const { prediction } = usePrediction();
   const navigate = useNavigate();
 
-  // No prediction yet — prompt user to go back
   if (!prediction) {
     return (
       <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -85,7 +92,7 @@ export function RegretAnalysis() {
               </div>
               <h2 className="text-xl font-bold text-gray-800">No prediction yet</h2>
               <p className="text-gray-500 text-sm max-w-xs">
-                Go to the Predictions page, fill in your decision and options, then submit to see the regret analysis here.
+                Go to the Predictions page, fill in your decision and all three options, then submit to see the analysis here.
               </p>
               <button
                 onClick={() => navigate("/predict")}
@@ -100,32 +107,41 @@ export function RegretAnalysis() {
     );
   }
 
-  const { title, optionA, optionB, result } = prediction;
-  const { regretA, regretB, recommended, explanation, riskFactors } = result;
+  const { title, optionA, optionB, optionC, result } = prediction;
+  const { regretA, regretB, regretC, recommended, explanation, riskFactors, insights } = result;
 
-  const highRegretValue  = Math.max(regretA, regretB);
-  const highRegretOption = regretA > regretB ? "A" : "B";
+  const regrets = { A: regretA, B: regretB, C: regretC };
+  const highRegretKey = Object.entries(regrets).sort((a, b) => b[1] - a[1])[0];
+  const highRegretValue = highRegretKey[1];
 
-  const barData = [
-    { name: "Option A", regret: regretA, success: 100 - regretA },
-    { name: "Option B", regret: regretB, success: 100 - regretB },
-  ];
+  const barData = OPTIONS_META.map((o) => ({
+    name: o.label,
+    Regret:  regrets[o.key],
+    Success: 100 - regrets[o.key],
+  }));
 
-  const rf = riskFactors ?? { financial: { a: 0, b: 0 }, emotional: { a: 0, b: 0 }, time: { a: 0, b: 0 } };
+  const rf = riskFactors ?? {
+    financial: { a: 0, b: 0, c: 0 },
+    emotional: { a: 0, b: 0, c: 0 },
+    time:      { a: 0, b: 0, c: 0 },
+  };
 
   const radarData = [
-    { factor: "Financial", A: rf.financial.a, B: rf.financial.b },
-    { factor: "Emotional", A: rf.emotional.a, B: rf.emotional.b },
-    { factor: "Time",      A: rf.time.a,      B: rf.time.b      },
-    { factor: "Regret",    A: regretA,         B: regretB        },
-    { factor: "Success",   A: 100 - regretA,   B: 100 - regretB  },
+    { factor: "Financial", A: rf.financial.a, B: rf.financial.b, C: rf.financial.c },
+    { factor: "Emotional", A: rf.emotional.a, B: rf.emotional.b, C: rf.emotional.c },
+    { factor: "Time",      A: rf.time.a,      B: rf.time.b,      C: rf.time.c      },
+    { factor: "Regret",    A: regretA,         B: regretB,         C: regretC        },
+    { factor: "Success",   A: 100 - regretA,   B: 100 - regretB,   C: 100 - regretC  },
   ];
 
   const riskRows = [
-    { label: "Financial Impact", icon: DollarSign, iconBg: "bg-red-50",   iconColor: "text-red-500",   a: rf.financial.a, b: rf.financial.b },
-    { label: "Emotional Impact", icon: Heart,      iconBg: "bg-pink-50",  iconColor: "text-pink-500",  a: rf.emotional.a, b: rf.emotional.b },
-    { label: "Time Impact",      icon: Clock,      iconBg: "bg-amber-50", iconColor: "text-amber-500", a: rf.time.a,      b: rf.time.b      },
+    { label: "Financial Impact", icon: DollarSign, iconBg: "bg-red-50",   iconColor: "text-red-500",   values: rf.financial },
+    { label: "Emotional Impact", icon: Heart,      iconBg: "bg-pink-50",  iconColor: "text-pink-500",  values: rf.emotional },
+    { label: "Time Impact",      icon: Clock,      iconBg: "bg-amber-50", iconColor: "text-amber-500", values: rf.time      },
   ];
+
+  const optionTexts = { A: optionA, B: optionB, C: optionC };
+  const recommendedRegret = regrets[recommended];
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -148,7 +164,7 @@ export function RegretAnalysis() {
                   Regret Analysis
                 </h1>
               </div>
-              <p className="text-gray-500 text-sm ml-8">Based on your submitted decision and options.</p>
+              <p className="text-gray-500 text-sm ml-8">Based on your submitted decision and three options.</p>
             </motion.div>
 
             {/* Decision summary */}
@@ -157,12 +173,11 @@ export function RegretAnalysis() {
                 <CardContent className="p-6">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Your Decision</p>
                   <h2 className="text-lg font-bold text-gray-900 mb-4">{title}</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[{ label: "Option A", text: optionA, bg: "bg-blue-50",   border: "border-blue-200",   badge: "bg-blue-100 text-blue-700"   },
-                      { label: "Option B", text: optionB, bg: "bg-violet-50", border: "border-violet-200", badge: "bg-violet-100 text-violet-700" }].map((o) => (
-                      <div key={o.label} className={`rounded-xl p-4 border ${o.bg} ${o.border}`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {OPTIONS_META.map((o) => (
+                      <div key={o.key} className={`rounded-xl p-4 border ${o.bg} ${o.border}`}>
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${o.badge}`}>{o.label}</span>
-                        <p className="text-sm text-gray-700 mt-2 leading-relaxed">{o.text}</p>
+                        <p className="text-sm text-gray-700 mt-2 leading-relaxed">{optionTexts[o.key]}</p>
                       </div>
                     ))}
                   </div>
@@ -178,9 +193,9 @@ export function RegretAnalysis() {
                     <AlertTriangle className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-rose-800">High Regret Risk — Option {highRegretOption}</p>
+                    <p className="text-sm font-bold text-rose-800">High Regret Risk — Option {highRegretKey[0]}</p>
                     <p className="text-sm text-rose-700 mt-0.5">
-                      Option {highRegretOption} carries a <strong>{highRegretValue}%</strong> regret score — above the safe threshold. Review the risk factors carefully.
+                      Option {highRegretKey[0]} carries a <strong>{highRegretValue}%</strong> regret score — above the safe threshold. Review the risk factors carefully.
                     </p>
                   </div>
                 </div>
@@ -193,8 +208,9 @@ export function RegretAnalysis() {
                 <Card className="border border-gray-100 shadow-sm h-full">
                   <CardHeader className="pb-2"><CardTitle className="text-base text-gray-800">Regret Percentage</CardTitle></CardHeader>
                   <CardContent className="p-6 pt-2 space-y-5">
-                    <RegretBar label="Option A" value={regretA} colorClass="text-blue-600"   trackClass="bg-blue-100"   />
-                    <RegretBar label="Option B" value={regretB} colorClass="text-violet-600" trackClass="bg-violet-100" />
+                    {OPTIONS_META.map((o) => (
+                      <RegretBar key={o.key} label={o.label} value={regrets[o.key]} barColor={o.radar} trackClass="bg-gray-100" />
+                    ))}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -203,15 +219,16 @@ export function RegretAnalysis() {
                 <Card className="border border-gray-100 shadow-sm h-full">
                   <CardHeader className="pb-2"><CardTitle className="text-base text-gray-800">Regret vs Success</CardTitle></CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <div className="h-52">
+                    <div className="h-56">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={barData} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                           <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b7280" }} />
                           <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} domain={[0, 100]} />
                           <Tooltip contentStyle={{ borderRadius: "10px", fontSize: "12px" }} />
-                          <Bar dataKey="regret"  name="Regret %"  fill="#f43f5e" radius={[6,6,0,0]} />
-                          <Bar dataKey="success" name="Success %" fill="#10b981" radius={[6,6,0,0]} />
+                          <Legend wrapperStyle={{ fontSize: "12px" }} />
+                          <Bar dataKey="Regret"  fill="#f43f5e" radius={[6,6,0,0]} />
+                          <Bar dataKey="Success" fill="#10b981" radius={[6,6,0,0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -231,15 +248,13 @@ export function RegretAnalysis() {
                         <RadarChart data={radarData}>
                           <PolarGrid stroke="#e5e7eb" />
                           <PolarAngleAxis dataKey="factor" tick={{ fontSize: 11, fill: "#6b7280" }} />
-                          <Radar name="Option A" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.25} />
-                          <Radar name="Option B" dataKey="B" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.25} />
+                          {OPTIONS_META.map((o) => (
+                            <Radar key={o.key} name={o.label} dataKey={o.key} stroke={o.radar} fill={o.radar} fillOpacity={0.2} />
+                          ))}
                           <Tooltip contentStyle={{ borderRadius: "10px", fontSize: "12px" }} />
+                          <Legend wrapperStyle={{ fontSize: "12px" }} />
                         </RadarChart>
                       </ResponsiveContainer>
-                    </div>
-                    <div className="flex justify-center gap-6 mt-2">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />Option A</div>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-3 h-3 rounded-full bg-violet-500 inline-block" />Option B</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -255,7 +270,7 @@ export function RegretAnalysis() {
               </motion.div>
             </div>
 
-            {/* Recommendation card */}
+            {/* Recommendation */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
               <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md">
                 <CardContent className="p-6">
@@ -269,9 +284,7 @@ export function RegretAnalysis() {
                       <p className="text-sm text-gray-600 mt-1 leading-relaxed">{explanation}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-3xl font-bold text-emerald-600">
-                        {100 - (recommended === "A" ? regretA : regretB)}%
-                      </p>
+                      <p className="text-3xl font-bold text-emerald-600">{100 - recommendedRegret}%</p>
                       <p className="text-xs text-gray-500">Success score</p>
                     </div>
                   </div>
@@ -280,7 +293,7 @@ export function RegretAnalysis() {
             </motion.div>
 
             {/* Insights */}
-            {result.insights?.length > 0 && (
+            {insights?.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
                 <Card className="border border-gray-100 shadow-sm">
                   <CardHeader className="pb-2">
@@ -290,7 +303,7 @@ export function RegretAnalysis() {
                   </CardHeader>
                   <CardContent className="p-6 pt-2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {result.insights.map((tip, i) => (
+                      {insights.map((tip, i) => (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
